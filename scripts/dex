@@ -1,0 +1,44 @@
+#!/bin/bash
+
+cmd=$1
+
+usage() {
+  echo "$0 - Usage"
+  echo " - do      - run a command"
+  echo " - build   - build the image"
+  echo " - run     - run the app"
+}
+
+image_name() {
+  path=`pwd`
+  echo `basename $path`
+}
+
+cmd_build() {
+  image=$(image_name)
+  echo "Building image for <${image}>"
+  docker build -t $image .
+}
+
+cmd_run() {
+  echo "run the image for this application"
+}
+
+cmd_do() {
+  echo "execute a command in the docker image"
+}
+
+case $1 in
+  do)
+    cmd_run
+    ;;
+  build)
+    cmd_build
+    ;;
+  run)
+    cmd_run
+    ;;
+  *)
+    usage
+    ;;
+esac

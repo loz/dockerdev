@@ -9,3 +9,5 @@ WHITE="\[\033[0;37m\]"
 
 #Git Command Completion/PS1
 export PS1="$BLUE\w $YELLOW\$(__git_ps1 \"(%s)\")$WHITE:> "
+
+cd ~/Development
