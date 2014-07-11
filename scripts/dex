@@ -4,9 +4,10 @@ cmd=$1
 
 usage() {
   echo "$0 - Usage"
-  echo " - do      - run a command"
   echo " - build   - build the image"
-  echo " - run     - run the app"
+  echo " - run      - run a command in image"
+  echo " - start    - start the app"
+  echo " - stop     - stop the app"
 }
 
 image_name() {
@@ -20,23 +21,36 @@ cmd_build() {
   docker build -t $image .
 }
 
-cmd_run() {
-  echo "run the image for this application"
+cmd_start() {
+  image=$(image_name)
+  echo "Running <${image}>"
+  docker run -d --name $image $image
 }
 
-cmd_do() {
+cmd_stop() {
+  image=$(image_name)
+  echo "Stopping <${image}>"
+  docker stop $image
+  echo "Cleaning up"
+  docker rm $image
+}
+
+cmd_run() {
   echo "execute a command in the docker image"
 }
 
 case $1 in
-  do)
+  run)
     cmd_run
     ;;
   build)
     cmd_build
     ;;
-  run)
-    cmd_run
+  start)
+    cmd_start
+    ;;
+  stop)
+    cmd_stop
     ;;
   *)
     usage
