@@ -16,7 +16,7 @@ image_name() {
 }
 
 app_default_args() {
-  if [-e .dexrc ]; then
+  if [ -e .dexrc ]; then
     args=$(cat .dexrc | grep default_args | awk '{$1=""; print $0}')
     echo $args
   fi
