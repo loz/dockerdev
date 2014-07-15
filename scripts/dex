@@ -15,6 +15,13 @@ image_name() {
   echo `basename $path`
 }
 
+app_default_args() {
+  if [-e .dexrc ]; then
+    args=$(cat .dexrc | grep default_args | awk '{$1=""; print $0}')
+    echo $args
+  fi
+}
+
 cmd_build() {
   image=$(image_name)
   echo "Building image for <${image}>"
@@ -36,12 +43,17 @@ cmd_stop() {
 }
 
 cmd_run() {
-  echo "execute a command in the docker image"
+  args=$(app_default_args)
+  image=$(image_name)
+  run_cmd="docker run --rm -ti ${args} ${image} $*"
+  echo "Running $run_cmd"
+  $run_cmd
 }
 
 case $1 in
   run)
-    cmd_run
+    command=${*:2}
+    cmd_run $command
     ;;
   build)
     cmd_build
