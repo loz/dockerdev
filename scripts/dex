@@ -13,21 +13,32 @@ usage() {
 
 image_name() {
   path=`pwd`
-  echo `basename $path`
+  echo -n `basename $path`
 }
 
 app_devmount_args() {
   if [ -e .dexrc ]; then
     vol=$(cat .dexrc | grep dev_mount | awk '{$1=""; print $0}' | sed -e 's/^ *//' -e 's/ *$//')
-    cwd=$(pwd)
-    echo "-v ${cwd}:${vol}"
+    if [ "$vol" != "" ]; then
+      cwd=$(pwd)
+      echo -n "-v ${cwd}:${vol}"
+    fi
   fi
 }
 
 app_default_args() {
   if [ -e .dexrc ]; then
     args=$(cat .dexrc | grep default_args | awk '{$1=""; print $0}')
-    echo $args
+    echo -n $args
+  fi
+}
+
+app_socat_map_cmd() {
+  if [ -e .dexrc ]; then
+    ports=$(cat .dexrc | grep host_nat | awk '{$1=""; print $0}' | sed -e 's/^ *//' -e 's/ *$//')
+    for port in $ports; do
+      echo -n "socat TCP4-LISTEN:${port},fork,reuseaddr TCP4:172.17.0.136:${port} & "
+    done
   fi
 }
 
@@ -55,11 +66,13 @@ cmd_stop() {
 }
 
 cmd_run() {
+  cmd=$*
   args="$(app_default_args) $(app_devmount_args)"
   image=$(image_name)
-  run_cmd="docker run --rm -ti ${args} ${image} $*"
+  cmd="$(app_socat_map_cmd) ${cmd}"
+  run_cmd="docker run --rm -ti ${args} ${image} sh -c '${cmd}'"
   echo "Running $run_cmd"
-  $run_cmd
+  eval $run_cmd
 }
 
 case $1 in
