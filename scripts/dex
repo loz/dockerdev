@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 cmd=$1
 
@@ -8,11 +8,20 @@ usage() {
   echo " - run      - run a command in image"
   echo " - start    - start the app"
   echo " - stop     - stop the app"
+  echo " - respin   - stop, build, start"
 }
 
 image_name() {
   path=`pwd`
   echo `basename $path`
+}
+
+app_devmount_args() {
+  if [ -e .dexrc ]; then
+    vol=$(cat .dexrc | grep dev_mount | awk '{$1=""; print $0}' | sed -e 's/^ *//' -e 's/ *$//')
+    cwd=$(pwd)
+    echo "-v ${cwd}:${vol}"
+  fi
 }
 
 app_default_args() {
@@ -29,9 +38,12 @@ cmd_build() {
 }
 
 cmd_start() {
+  args=$(app_default_args)
   image=$(image_name)
   echo "Running <${image}>"
-  docker run -d --name $image $image
+  run_cmd="docker run -d --name $image ${args} $image"
+  echo "Running $run_cmd"
+  $run_cmd
 }
 
 cmd_stop() {
@@ -43,7 +55,7 @@ cmd_stop() {
 }
 
 cmd_run() {
-  args=$(app_default_args)
+  args="$(app_default_args) $(app_devmount_args)"
   image=$(image_name)
   run_cmd="docker run --rm -ti ${args} ${image} $*"
   echo "Running $run_cmd"
@@ -63,6 +75,11 @@ case $1 in
     ;;
   stop)
     cmd_stop
+    ;;
+  respin)
+    cmd_stop
+    cmd_build
+    cmd_start
     ;;
   *)
     usage

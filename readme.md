@@ -35,3 +35,15 @@ add to `~/.ssh/config`
        ForwardAgent yes
 
 this should have your docker host working with your local ssh key
+
+## .dexrc
+
+You can set default arguments for dex runs and starts which apply when starting containers.
+
+Example:
+
+    default_args: -v /Development/bundler_volume/:/var/bundler/ --link mysql:mysql -p 80:3000
+    dev_mount: /var/www/
+
+Above the default args are supplied to docker run commands, and the dev mount will mount the
+root directory of your application to the given mount point when dex run is used (not dex start)
