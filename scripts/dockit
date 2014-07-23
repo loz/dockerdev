@@ -17,8 +17,8 @@ image_name() {
 }
 
 app_devmount_args() {
-  if [ -e .dexrc ]; then
-    vol=$(cat .dexrc | grep dev_mount | awk '{$1=""; print $0}' | sed -e 's/^ *//' -e 's/ *$//')
+  if [ -e .dockitrc ]; then
+    vol=$(cat .dockitrc | grep dev_mount | awk '{$1=""; print $0}' | sed -e 's/^ *//' -e 's/ *$//')
     if [ "$vol" != "" ]; then
       cwd=$(pwd)
       echo -n "-v ${cwd}:${vol}"
@@ -27,15 +27,15 @@ app_devmount_args() {
 }
 
 app_default_args() {
-  if [ -e .dexrc ]; then
-    args=$(cat .dexrc | grep default_args | awk '{$1=""; print $0}')
+  if [ -e .dockitrc ]; then
+    args=$(cat .dockitrc | grep default_args | awk '{$1=""; print $0}')
     echo -n $args
   fi
 }
 
 app_socat_map_cmd() {
-  if [ -e .dexrc ]; then
-    ports=$(cat .dexrc | grep host_nat | awk '{$1=""; print $0}' | sed -e 's/^ *//' -e 's/ *$//')
+  if [ -e .dockitrc ]; then
+    ports=$(cat .dockitrc | grep host_nat | awk '{$1=""; print $0}' | sed -e 's/^ *//' -e 's/ *$//')
     for port in $ports; do
       echo -n "socat TCP4-LISTEN:${port},fork,reuseaddr TCP4:172.17.0.136:${port} & "
     done
