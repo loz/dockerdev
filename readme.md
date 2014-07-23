@@ -132,9 +132,12 @@ in webapp's .dockitrc
 this will use socat to route traffic send to localhost:3306 on the container to the host machine.
 Notice you will need to ensure that socat is installed in the image for the container.
 
+You may include as many lines with host_nat as are required.
+
 ### env
 
 Specify environment variables for when running.., for example
 
     env: MYSQL_PASSWORD=mydevpassword
 
+You may include as many lines with env as are required.
