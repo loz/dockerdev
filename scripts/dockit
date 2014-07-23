@@ -4,11 +4,12 @@ cmd=$1
 
 usage() {
   echo "$0 - Usage"
-  echo " - build   - build the image"
+  echo " - build    - build the image"
   echo " - run      - run a command in image"
   echo " - start    - start the app"
   echo " - stop     - stop the app"
   echo " - respin   - stop, build, start"
+  echo " - watch    - tail and watch the logs"
 }
 
 image_name() {
@@ -33,11 +34,20 @@ app_default_args() {
   fi
 }
 
+app_env_args() {
+  if [ -e .dockitrc ]; then
+    envs=$(cat .dockitrc | grep env | awk '{$1=""; print $0}' | sed -e 's/^ *//' -e 's/ *$//')
+    for env in $envs; do
+      echo -n " -e \"${env}\""
+    done
+  fi
+}
+
 app_socat_map_cmd() {
   if [ -e .dockitrc ]; then
     ports=$(cat .dockitrc | grep host_nat | awk '{$1=""; print $0}' | sed -e 's/^ *//' -e 's/ *$//')
     for port in $ports; do
-      echo -n "socat TCP4-LISTEN:${port},fork,reuseaddr TCP4:172.17.0.136:${port} & "
+      echo -n "socat TCP4-LISTEN:${port},fork,reuseaddr TCP4:172.17.42.1:${port} & "
     done
   fi
 }
@@ -49,12 +59,12 @@ cmd_build() {
 }
 
 cmd_start() {
-  args=$(app_default_args)
+  cmd=$*
+  args="$(app_default_args) $(app_devmount_args)"
   image=$(image_name)
-  echo "Running <${image}>"
-  run_cmd="docker run -d --name $image ${args} $image"
-  echo "Running $run_cmd"
-  $run_cmd
+  cmd="$(app_socat_map_cmd) ${cmd}"
+  run_cmd="docker run -d --name $image ${args} ${image} sh -c '${cmd}'"
+  eval $run_cmd
 }
 
 cmd_stop() {
@@ -67,12 +77,18 @@ cmd_stop() {
 
 cmd_run() {
   cmd=$*
-  args="$(app_default_args) $(app_devmount_args)"
+  args="$(app_default_args) $(app_devmount_args) $(app_env_args)"
   image=$(image_name)
   cmd="$(app_socat_map_cmd) ${cmd}"
   run_cmd="docker run --rm -ti ${args} ${image} sh -c '${cmd}'"
   echo "Running $run_cmd"
   eval $run_cmd
+}
+
+cmd_watch() {
+  echo "Watching Logs"
+  image=$(image_name)
+  docker logs -tf $image
 }
 
 case $1 in
@@ -84,10 +100,14 @@ case $1 in
     cmd_build
     ;;
   start)
-    cmd_start
+    command=${*:2}
+    cmd_start $command
     ;;
   stop)
     cmd_stop
+    ;;
+  watch)
+    cmd_watch
     ;;
   respin)
     cmd_stop
