@@ -36,6 +36,54 @@ add to `~/.ssh/config`
 
 this should have your docker host working with your local ssh key
 
+## dockit command
+
+Docker development is made easier with a tool called dockit.  This allows you to build images
+and run commands quickly, and also setup a number of default items to the runs using the
+custom rc file. 
+
+### build an image
+
+    dockit build
+
+This will build and tag a container for the current folder's Dockerfile, named on the current
+folder for convention
+
+### run commands using the image
+
+    dockit run bundle exec rake -T
+
+The above example runs a rails rake task list in the image which was build for the current folder.
+This will run in interactive mode, so it will not return until the process completes.
+
+### run image in the background
+
+    dockit start bundle exec rails s
+
+The above example starts a rails server, and start runs this in daemon mode.  The container will
+have the name of the image.
+
+
+### stopping running services
+
+This is simply done by stop
+
+    dockit stop
+
+### viewing logs of the running service
+
+    dockit watch
+
+This will watch and continue to tail the logs of the container
+
+### restarting the service
+
+To restart based on a change you can stop and rebuild it..
+
+    dockit respin
+
+This will stop, build and start again
+
 ## .dockitrc
 
 You can set default arguments for dockit runs and starts which apply when starting containers.
@@ -74,8 +122,8 @@ accessed as if they were localhost on the container.
 
 Example.
 
-(mysql) - container which is exposing 3306 onto the docker container
-(webapp) - application which expects mysql on localhost
+* (mysql) - container which is exposing 3306 onto the docker container
+* (webapp) - application which expects mysql on localhost
 
 in webapp's .dockitrc
 
