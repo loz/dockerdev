@@ -52,6 +52,11 @@ app_socat_map_cmd() {
   fi
 }
 
+dockerfile_cmd() {
+  cmd=$(cat Dockerfile | grep CMD | awk '{$1=""; print $0}')
+  echo $cmd
+}
+
 cmd_build() {
   image=$(image_name)
   echo "Building image for <${image}>"
@@ -59,7 +64,7 @@ cmd_build() {
 }
 
 cmd_start() {
-  cmd=$*
+  cmd=$(dockerfile_cmd)
   args="$(app_default_args) $(app_devmount_args)"
   image=$(image_name)
   cmd="$(app_socat_map_cmd) ${cmd}"
