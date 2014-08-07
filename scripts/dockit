@@ -52,6 +52,21 @@ app_socat_map_cmd() {
   fi
 }
 
+post_build_args() {
+  if [ -e .dockitrc ]; then
+    args=$(cat .dockitrc | grep post_build_args | awk '{$1=""; print $0}')
+    echo -n $args
+  fi
+}
+
+
+post_build_task() {
+  if [ -e .dockitrc ]; then
+    task=$(cat .dockitrc | grep 'post_build:' | awk '{$1=""; print $0}' | sed -e 's/^ *//' -e 's/ *$//')
+    echo $task
+  fi
+}
+
 dockerfile_cmd() {
   cmd=$(cat Dockerfile | grep CMD | awk '{$1=""; print $0}')
   echo $cmd
@@ -61,11 +76,36 @@ cmd_build() {
   image=$(image_name)
   echo "Building image for <${image}>"
   docker build -t $image .
+  cmd=$(post_build_task)
+  if [ -n "$cmd" ]; then
+    echo "Running Post Build Process"
+    args="$(post_build_args) $(app_env_args)"
+    run_cmd="docker run --name $image ${args} ${image} sh -c '${cmd}'"
+    echo $run_cmd
+    eval $run_cmd
+    echo "Committing Image"
+    docker_cmd="docker commit $image $image"
+    echo $docker_cmd
+    eval $docker_cmd
+    echo "Restoring original command"
+    cmd=$(dockerfile_cmd)
+    docker_cmd="docker rm $image"
+    eval $docker_cmd
+    run_cmd="docker run -d --name $image ${image} sh -c '${cmd}'"
+    echo $run_cmd
+    eval $run_cmd
+    echo "Committing Image"
+    docker_cmd="docker commit $image $image"
+    echo $docker_cmd
+    eval $docker_cmd
+    docker_cmd="docker rm $image"
+    eval $docker_cmd
+  fi
 }
 
 cmd_start() {
   cmd=$(dockerfile_cmd)
-  args="$(app_default_args) $(app_devmount_args)"
+  args="$(app_default_args) $(app_devmount_args) $(app_env_args)"
   image=$(image_name)
   cmd="$(app_socat_map_cmd) ${cmd}"
   run_cmd="docker run -d --name $image ${args} ${image} sh -c '${cmd}'"
